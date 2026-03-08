@@ -12,8 +12,16 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 18
+      - name: Fix invalid JSX characters
+        run: |
+          find . -name "*.tsx" -not -path "*/node_modules/*" | xargs sed -i \
+            -e 's/>>>/\&gt;\&gt;\&gt;/g' \
+            -e 's/>>/\&gt;\&gt;/g' \
+            -e 's/Recall > /Recall \&gt; /g' \
+            -e 's/Rate > /Rate \&gt; /g' \
+            -e 's/> [0-9]/\&gt; /g' \
+            -e 's/ > / \&gt; /g'
       - run: npm install --legacy-peer-deps
-      - run: npm install --save-dev @babel/core @babel/preset-react --legacy-peer-deps
       - run: npm run build
       - uses: peaceiris/actions-gh-pages@v3
         with:
