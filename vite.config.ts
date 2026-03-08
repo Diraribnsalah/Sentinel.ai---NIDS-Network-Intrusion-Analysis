@@ -10,7 +10,15 @@ export default defineConfig(({ mode }) => {
         port: 3000,
         host: '0.0.0.0',
       },
-      plugins: [react()],
+      plugins: [
+        react({
+          babel: {
+            parserOpts: {
+              plugins: ['jsx']
+            }
+          }
+        })
+      ],
       define: {
         'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),
         'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY)
@@ -20,8 +28,6 @@ export default defineConfig(({ mode }) => {
           '@': path.resolve(__dirname, '.'),
         }
       },
-      esbuild: {
-        logOverride: { 'invalid-character-in-jsx': 'silent' }
-      }
+      esbuild: false
     };
 });
