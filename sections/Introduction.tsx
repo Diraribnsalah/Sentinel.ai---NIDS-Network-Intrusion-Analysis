@@ -11,7 +11,7 @@ const Introduction: React.FC = () => {
 
       <section className="space-y-6">
         <p className="text-xl text-gray-400 font-medium leading-relaxed font-mono">
-          <span className="text-green-500">>></span> In a world governed by digital interactions, the network is the primary artery of civilization. But where there is data, there is a target.
+          <span className="text-green-500">&gt;&gt;</span> In a world governed by digital interactions, the network is the primary artery of civilization. But where there is data, there is a target.
         </p>
         
         <div className="p-8 bg-black border border-green-500/30 rounded-none space-y-4 relative overflow-hidden group hover:border-green-500 transition-colors duration-500">
