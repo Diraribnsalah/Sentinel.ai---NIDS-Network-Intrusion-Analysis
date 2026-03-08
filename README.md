@@ -9,7 +9,7 @@
 
 ## ⚡ LIVE THREAT INTERFACE
 > **Project Directive:** Interactive visualization of network traffic security patterns.
-> ### 🌐 [ACCESS LIVE WEBSITE REPORT](PASTE_YOUR_VERCEL_LINK_HERE)
+> ### 🌐 [ACCESS LIVE WEBSITE REPORT](https://omarjebbari.github.io/Sentinel.ai---NIDS-Network-Intrusion-Analysis/)
 
 ---
 
