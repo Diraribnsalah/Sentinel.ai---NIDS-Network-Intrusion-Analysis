@@ -12,10 +12,10 @@ export default defineConfig(({ mode }) => {
       },
       plugins: [
         react({
+          jsxRuntime: 'classic',
           babel: {
-            parserOpts: {
-              plugins: ['jsx']
-            }
+            plugins: [],
+            parserOpts: { strictMode: false }
           }
         })
       ],
@@ -28,6 +28,14 @@ export default defineConfig(({ mode }) => {
           '@': path.resolve(__dirname, '.'),
         }
       },
-      esbuild: false
+      build: {
+        target: 'esnext',
+        rollupOptions: {
+          onwarn(warning, warn) {
+            if (warning.code === 'UNUSED_EXTERNAL_IMPORT') return;
+            warn(warning);
+          }
+        }
+      }
     };
 });
