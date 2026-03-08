@@ -12,18 +12,95 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 18
-      - name: Fix invalid JSX characters
+      - name: Install dependencies
+        run: npm install --legacy-peer-deps
+      - name: Install babel tools
+        run: npm install --save-dev @babel/core @babel/cli @babel/preset-env @babel/preset-react @babel/preset-typescript --legacy-peer-deps
+      - name: Fix ALL JSX text issues in all files
         run: |
-          find . -name "*.tsx" -not -path "*/node_modules/*" | xargs sed -i \
-            -e 's/>>>/\&gt;\&gt;\&gt;/g' \
-            -e 's/>>/\&gt;\&gt;/g' \
-            -e 's/Recall > /Recall \&gt; /g' \
-            -e 's/Rate > /Rate \&gt; /g' \
-            -e 's/> [0-9]/\&gt; /g' \
-            -e 's/ > / \&gt; /g'
-      - run: npm install --legacy-peer-deps
-      - run: npm run build
-      - uses: peaceiris/actions-gh-pages@v3
+          node -e "
+          const fs = require('fs');
+          const path = require('path');
+          
+          function fixFile(filePath) {
+            let content = fs.readFileSync(filePath, 'utf8');
+            
+            // Fix any previously mangled &gt; back to > first
+            content = content.replace(/&gt;/g, '>');
+            
+            // Now smartly replace > that appear as JSX text content
+            // Strategy: replace > only when it appears between JSX closing tag and text
+            // We use a line-by-line approach
+            const lines = content.split('\n');
+            const fixed = lines.map(line => {
+              // Skip lines that are pure JS/TS logic (if, for, while, =>, function, etc.)
+              const trimmed = line.trim();
+              if (
+                trimmed.startsWith('if ') ||
+                trimmed.startsWith('} else') ||
+                trimmed.startsWith('for ') ||
+                trimmed.startsWith('while ') ||
+                trimmed.startsWith('const ') ||
+                trimmed.startsWith('let ') ||
+                trimmed.startsWith('var ') ||
+                trimmed.startsWith('return {') ||
+                trimmed.startsWith('=>') ||
+                trimmed.includes('=>') && !trimmed.includes('</') ||
+                trimmed.startsWith('//') ||
+                trimmed.startsWith('*') ||
+                trimmed.startsWith('pathD') ||
+                trimmed.includes('rocPoints') ||
+                trimmed.includes('.forEach') ||
+                trimmed.includes('.map(') ||
+                trimmed.includes('.filter(') ||
+                trimmed.includes('Math.') ||
+                trimmed.includes('> 0') && !trimmed.includes('<') ||
+                trimmed.includes('> 1') && !trimmed.includes('<') ||
+                trimmed.includes('length >') ||
+                trimmed.includes('index >') ||
+                trimmed.includes('i >') ||
+                trimmed.includes('> i') ||
+                trimmed.includes('=>')
+              ) {
+                return line;
+              }
+              
+              // For JSX text lines, replace bare > with &gt;
+              // Only replace > that appear inside JSX text (after > of a tag, before < of closing)
+              line = line.replace(/>([^<{]+)</g, (match, text) => {
+                const fixedText = text.replace(/>/g, '&gt;');
+                return '>' + fixedText + '<';
+              });
+              
+              return line;
+            });
+            
+            fs.writeFileSync(filePath, fixed.join('\n'));
+          }
+          
+          function walk(dir) {
+            try {
+              fs.readdirSync(dir).forEach(f => {
+                const full = path.join(dir, f);
+                const stat = fs.statSync(full);
+                if (stat.isDirectory() && f !== 'node_modules' && f !== '.git' && f !== 'dist') {
+                  walk(full);
+                } else if (f.endsWith('.tsx') || f.endsWith('.ts') || f.endsWith('.jsx')) {
+                  fixFile(full);
+                }
+              });
+            } catch(e) { console.error(e); }
+          }
+          
+          walk('.');
+          console.log('Done fixing JSX files');
+          "
+      - name: Build
+        run: npm run build
+        env:
+          NODE_OPTIONS: "--max-old-space-size=4096"
+      - name: Deploy
+        uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./dist
